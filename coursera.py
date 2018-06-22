@@ -56,20 +56,20 @@ def output_courses_info_to_xlsx(filepath, courses_info_list):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        exit('need path to file as argument')
+    if len(sys.argv) == 1 or not os.path.isdir(sys.argv[1]):
+        exit('need path to file as argument / incorrect directory to save')
     dir_path = sys.argv[1]
     file_name = 'coursera_courses.xlsx'
-    if not os.path.isdir(dir_path):
-        exit('incorrect directory to save')
     file_path = os.path.join(dir_path, file_name)
     courses = get_courses_list()
     max_length = 20
+    min_length = 0
     courses_info_list = []
     try:
         while len(courses_info_list) < max_length:
-            index = random.randint(0, len(courses))
+            index = random.randint(min_length, len(courses))
             courses_info_list.append(get_course_info(courses[index]))
     except(IndexError, AttributeError):
         pass
     output_courses_info_to_xlsx(file_path, courses_info_list)
+    print('File "coursera_courses.xlsx" was successfully created')
