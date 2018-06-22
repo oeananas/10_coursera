@@ -1,6 +1,16 @@
 # Coursera Dump
 
-[TODO. There will be project description]
+This script provides information about the courses on the site of the courser, leads it into a convenient form for processing and uploads it to the excel file. Information is initially provided on 20 random courses. The information includes the name of the course, the language and the presence of subtitles, the closest start date, the number of weeks of study, and the average grade of the course.
+When running the script, you must specify the directory where the xlsx format file with the information will be saved as an argument
+
+# Quick Start
+
+Example of script launch on Linux, Python 3.5
+
+launch on console:
+```bash
+python3 coursera.py /Users/stanislavkostrov/PycharmProjects/10_coursera-master
+```
 
 # Project Goals
 
