@@ -8,23 +8,16 @@ from lxml import html
 from bs4 import BeautifulSoup
 
 
-def get_data_from_xml():
-    response = requests.get('https://www.coursera.org/sitemap~www~courses.xml')
-    content = response.text.encode('utf-8')
+def get_data_from_url(url):
+    response = requests.get(url)
+    content = response.content.decode('utf-8')
     return content
 
 
-def get_courses_urls_list(content):
-    parsed_urls_document = html.fromstring(content)
+def get_courses_urls_list(xml_data):
+    parsed_urls_document = html.fromstring(xml_data)
     courses_urls_list = parsed_urls_document.xpath('//loc/text()')
     return courses_urls_list
-
-
-def get_parsed_html(course_url):
-    response = requests.get(course_url)
-    content = response.content.decode('utf-8')
-    course_page = BeautifulSoup(content, 'html.parser')
-    return course_page
 
 
 def get_course_info(page):
@@ -86,15 +79,17 @@ if __name__ == '__main__':
     dir_path = sys.argv[1]
     file_name = 'coursera_courses.xlsx'
     file_path = os.path.join(dir_path, file_name)
-    courses_data_from_xml = get_data_from_xml()
-    courses_urls_list = get_courses_urls_list(courses_data_from_xml)
+    courses_url = 'https://www.coursera.org/sitemap~www~courses.xml'
+    courses_data_from_url = get_data_from_url(courses_url).encode('utf-8')
+    courses_urls_list = get_courses_urls_list(courses_data_from_url)
     number_of_courses = 20
     courses_info_list = []
     try:
         short_urls_list = random.sample(courses_urls_list, number_of_courses)
         for course_url in short_urls_list:
-            course_page = get_parsed_html(course_url)
-            course_info = get_course_info(course_page)
+            course_data = get_data_from_url(course_url)
+            soup = BeautifulSoup(course_data, 'html.parser')
+            course_info = get_course_info(soup)
             courses_info_list.append(course_info)
     except(IndexError, AttributeError):
         pass
