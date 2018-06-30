@@ -11,38 +11,41 @@ from bs4 import BeautifulSoup
 def get_data_from_url(url):
     response = requests.get(url)
     content = response.text
-    soup = BeautifulSoup(content, 'html.parser')
-    return soup
+    return content
 
 
-def get_courses_urls_list(xml_data):
+def get_courses_urls_list():
+    xml_feed = 'https://www.coursera.org/sitemap~www~courses.xml'
+    xml_data = get_data_from_url(xml_feed).encode('utf-8')
     parsed_urls_document = html.fromstring(xml_data)
-    courses_urls_list = parsed_urls_document.xpath('//loc/text()')
-    return courses_urls_list
+    courses_list = parsed_urls_document.xpath('//loc/text()')
+    return courses_list
 
 
-def get_course_info(page):
-    title = page.find('h1', {'class': 'title display-3-text'}).text
-    lang = page.find('div', {'class': 'rc-Language'}).text
-    startdate = page.find('div', {
+def get_course_info(coursera_course_url):
+    course_data = get_data_from_url(coursera_course_url)
+    soup = BeautifulSoup(course_data, 'html.parser')
+    title = soup.find('h1', {'class': 'title display-3-text'}).text
+    lang = soup.find('div', {'class': 'rc-Language'}).text
+    startdate = soup.find('div', {
         'class': 'startdate rc-StartDateString caption-text'
     }).text
-    weeks = len(page.findAll('div', {'class': 'week'}))
-    rating_tags = page.findAll('div', {'class': 'ratings-text headline-2-text'})
+    weeks = len(soup.findAll('div', {'class': 'week'}))
+    rating_tags = soup.findAll('div', {'class': 'ratings-text headline-2-text'})
     rating = ''
     for rating_tag in rating_tags:
         rating += rating_tag.text
-    course_info = {
+    course_information_dict = {
         'title': title,
         'language': lang,
         'startdate': startdate,
         'weeks': weeks,
         'rating': rating
     }
-    return course_info
+    return course_information_dict
 
 
-def output_courses_info_to_xlsx(courses_info_list):
+def output_courses_info_to_xlsx(courses_info_lst):
     workbook = openpyxl.Workbook()
     worksheet = workbook.active
     title_list = ['TITLE', 'LANGUAGE', 'DATE TO START', 'WEEKS', 'RATING']
@@ -55,15 +58,15 @@ def output_courses_info_to_xlsx(courses_info_list):
         worksheet['E1']
     ]:
         title.font = Font(bold=True)
-    for course_info_dic in courses_info_list:
-        course_info = [
+    for course_info_dic in courses_info_lst:
+        course_information = [
             course_info_dic['title'],
             course_info_dic['language'],
             course_info_dic['startdate'],
             course_info_dic['weeks'],
             course_info_dic['rating']
         ]
-        worksheet.append(course_info)
+        worksheet.append(course_information)
     for column_cells in worksheet.columns:
         length = max(len(str(cell.value)) for cell in column_cells)
         worksheet.column_dimensions[column_cells[0].column].width = length
@@ -80,16 +83,13 @@ if __name__ == '__main__':
     dir_path = sys.argv[1]
     file_name = 'coursera_courses.xlsx'
     file_path = os.path.join(dir_path, file_name)
-    xml_feed = 'https://www.coursera.org/sitemap~www~courses.xml'
-    courses_data_from_url = get_data_from_url(xml_feed).encode('utf-8')
-    courses_urls_list = get_courses_urls_list(courses_data_from_url)
+    courses_urls_list = get_courses_urls_list()
     number_of_courses = 20
     courses_info_list = []
     try:
         short_urls_list = random.sample(courses_urls_list, number_of_courses)
         for course_url in short_urls_list:
-            course_data = get_data_from_url(course_url)
-            course_info = get_course_info(course_data)
+            course_info = get_course_info(course_url)
             courses_info_list.append(course_info)
     except(IndexError, AttributeError):
         pass
